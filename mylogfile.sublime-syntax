@@ -1,0 +1,115 @@
+%YAML 1.2
+---
+# See http://www.sublimetext.com/docs/syntax.html
+name: Text and log files
+scope: source.txtlog
+
+file_extensions:
+  - log 
+  - txt
+  
+contexts:
+  main: 
+
+    - match: '(\[)(.*)(\b(ERROR|error|Err|Error)\b)(.*)(\])'
+      scope:  storage.modifier.txtlog 
+    
+    - match: '(\[)(.*)(\b(WARNING|warn|warning|Warning)\b)(.*)(\])'
+      scope: variable.parameter.txtlog
+
+    - match: (?i)INFO(?-i) 
+      scope: punctuation.separator.continuation.txtlog
+    
+    - match: '(\[)(.*)(\])'
+      scope: punctuation.definition.variable.txtlog
+
+    - include: email  
+    - include: comports
+    - include: string
+    - include: number 
+    - include: directory
+    - include: signs
+    - include: urls
+ 
+  
+  comports: 
+    - match: \b(?i)COM(?-i)\d+\b  # Com nom
+      scope: punctuation.definition.variable.txtlog
+
+  string:
+    - match: \"
+      scope: support.type.txtlog
+      push:
+        - meta_scope: support.type.txtlog
+        - include: character-escape.txtlog
+        - match: \"
+          scope: support.type
+          pop: true
+        - match: \n
+          pop: true
+    - match: \'
+      scope: support.type
+      push:
+        - meta_scope: support.type.txtlog
+        - include: character-escape
+        - match: \'
+          scope: support.type
+          pop: true
+        - match: \n
+          pop: true
+ 
+  number: 
+    - match: '(\b(\d+)\b)'
+      scope: meta.number.integer.decimal.txtlog
+      captures:
+        1: keyword.operator.arithmetic.txtlog
+        2: constant.numeric.value.txtlog
+
+  directory:
+    - match: '[a-zA-Z]:\\(((?![<>:"\/\\|?*]).)+((?<![ .])\\)?)*'
+      scope: keyword.operator.arithmetic.txtlog
+
+  signs: 
+    - match: \-|\+|\=|,|;|\|:-|\(|\)|\{|\}|\*|\&|\^|\$|\#|\% 
+      scope: keyword.operator.arithmetic.txtlog
+
+  email:
+    # email reference
+    - match: (?=\S+?@\S+?\.\S+?)
+      scope: punctuation.separator.continuation.txtlog
+      push: [email-meta, email-name]
+
+  email-meta:
+    - meta_include_prototype: false
+    - meta_scope: punctuation.separator.continuation.txtlog
+    - match: ''
+      pop: 1
+
+  email-name:
+    - meta_content_scope: punctuation.separator.continuation.txtlog
+    - match: '@'
+      scope: punctuation.separator.continuation.txtlog
+      set: email-domain
+ 
+
+  email-domain:
+    - meta_content_scope: punctuation.separator.continuation.txtlog
+    - match: \.
+      scope: punctuation.separator.continuation.txtlog
+    - include: email-end
+
+  email-end:
+    - match: '\s'
+      scope: punctuation.separator.continuation.txtlog
+      pop: 1 
+
+  urls:
+    - match: |-
+        (?x)
+        \b(?:
+          https|ftp|http?://(?:(?:[\w\d\-]+(?:\.[\w\d\-.]+)+)|localhost)  # http, https, ftp://
+        | www\.[\w\d\-]+(?:\.[\w\d\-.]+)+                        # www.
+        )
+        /?[\w\d\-.?,!'(){}\[\]/+&@%$#=:"|~;]*                    # url path and query string
+        [\w\d\-~:/#@$*+=]                                        # allowed end chars
+      scope: markup.underline.link.txtlog    
